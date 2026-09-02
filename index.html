@@ -3,21 +3,23 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Imposter Game</title>
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0,user-scalable=no">
+
+<title>IMPOSTER — CREEPY CEMETERY</title>
 
 <style>
 *{
-  box-sizing:border-box;
   margin:0;
   padding:0;
+  box-sizing:border-box;
 }
 
 html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  background:#080a0c;
+  background:#020305;
   font-family:Arial,sans-serif;
   color:white;
 }
@@ -25,39 +27,77 @@ html,body{
 canvas{
   position:fixed;
   inset:0;
-  width:100%;
-  height:100%;
   display:block;
 }
+
+/* =========================
+   CROSSHAIR
+========================= */
+
+#crosshair{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:white;
+  box-shadow:
+    0 0 4px #fff,
+    0 0 10px rgba(255,255,255,.8);
+  z-index:20;
+  pointer-events:none;
+}
+
+/* =========================
+   LOBBY
+========================= */
 
 .screen{
   position:fixed;
   inset:0;
+  z-index:50;
   display:flex;
   align-items:center;
   justify-content:center;
+
   background:
-    radial-gradient(circle at center,#20252b 0%,#090b0e 70%);
+    radial-gradient(
+      circle at center,
+      rgba(35,40,48,.85),
+      rgba(0,0,0,.97)
+    );
 }
 
 .panel{
-  width:min(440px,92vw);
+  width:min(450px,92vw);
   padding:30px;
-  background:rgba(15,18,22,.96);
-  border:1px solid #39414a;
   border-radius:18px;
-  box-shadow:0 20px 80px rgba(0,0,0,.7);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(18,21,25,.98),
+      rgba(5,7,9,.98)
+    );
+
+  border:1px solid #3b4149;
+
+  box-shadow:
+    0 30px 100px rgba(0,0,0,.9);
 }
 
 h1{
   text-align:center;
-  font-size:36px;
-  margin-bottom:8px;
+  font-size:38px;
+  letter-spacing:6px;
+  margin-bottom:5px;
 }
 
 .subtitle{
   text-align:center;
-  color:#929aa3;
+  color:#7c838b;
   margin-bottom:25px;
 }
 
@@ -65,33 +105,40 @@ input{
   width:100%;
   padding:14px;
   margin-bottom:12px;
-  border-radius:10px;
-  border:1px solid #424a53;
-  background:#090b0d;
+
+  background:#080a0c;
   color:white;
+
+  border:1px solid #3b4148;
+  border-radius:10px;
+
   font-size:16px;
   outline:none;
 }
 
 input:focus{
-  border-color:#668cff;
+  border-color:#758cff;
 }
 
 button{
   width:100%;
   padding:14px;
   margin-top:8px;
+
   border:0;
   border-radius:10px;
-  background:#4d6fff;
+
+  background:#465ee8;
   color:white;
+
+  font-size:15px;
   font-weight:bold;
-  font-size:16px;
+
   cursor:pointer;
 }
 
 button:hover{
-  background:#6684ff;
+  background:#5a70f3;
 }
 
 button:disabled{
@@ -101,42 +148,39 @@ button:disabled{
 
 .error{
   min-height:22px;
-  color:#ff7070;
-  text-align:center;
   margin-top:12px;
+
+  color:#ff7373;
+  text-align:center;
 }
 
 #lobby{
   display:none;
 }
 
-.lobbyTitle{
-  text-align:center;
-  font-size:28px;
-  margin-bottom:8px;
-}
-
-.roomCode{
+.room{
   text-align:center;
   font-size:22px;
-  letter-spacing:5px;
-  color:#7e9aff;
-  margin-bottom:20px;
+  letter-spacing:6px;
+  color:#8799ff;
+  margin:12px 0 20px;
 }
 
 .playerList{
-  max-height:300px;
+  max-height:280px;
   overflow-y:auto;
 }
 
 .player{
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  padding:12px;
+  align-items:center;
+
+  padding:11px;
   margin:7px 0;
-  background:#20252b;
-  border-radius:10px;
+
+  background:#181c21;
+  border-radius:9px;
 }
 
 .playerLeft{
@@ -146,66 +190,172 @@ button:disabled{
 }
 
 .dot{
-  width:12px;
-  height:12px;
+  width:11px;
+  height:11px;
   border-radius:50%;
 }
 
 .ready{
-  color:#65e88b;
-  font-size:13px;
+  color:#63e58a;
+  font-size:12px;
 }
 
-.notReady{
-  color:#858c94;
-  font-size:13px;
+.waiting{
+  color:#737b84;
+  font-size:12px;
 }
+
+/* =========================
+   HUD
+========================= */
 
 #gameUI{
   display:none;
 }
 
-.hud{
+#hud{
   position:fixed;
   left:15px;
   top:15px;
-  padding:12px 16px;
-  border-radius:12px;
-  background:rgba(0,0,0,.55);
+  z-index:15;
+
+  padding:12px 15px;
+
+  background:rgba(0,0,0,.48);
   border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+
   backdrop-filter:blur(5px);
 }
 
-.hudTitle{
+#hudName{
   font-weight:bold;
-  margin-bottom:5px;
 }
 
-#status{
-  color:#aeb6bf;
-  font-size:13px;
-}
-
-.controls{
-  position:fixed;
-  right:15px;
-  bottom:15px;
-  padding:12px 15px;
-  border-radius:12px;
-  background:rgba(0,0,0,.55);
-  color:#b8c0c8;
-  font-size:13px;
-}
-
-#startGame{
-  margin-top:15px;
-}
-
-.small{
+#hudStatus{
+  color:#9aa2ab;
   font-size:12px;
-  color:#7e8790;
-  text-align:center;
-  margin-top:12px;
+  margin-top:4px;
+}
+
+#help{
+  position:fixed;
+  left:50%;
+  bottom:20px;
+  transform:translateX(-50%);
+
+  z-index:15;
+
+  padding:9px 14px;
+
+  background:rgba(0,0,0,.45);
+  border-radius:10px;
+
+  color:#9ca4ad;
+  font-size:12px;
+}
+
+/* blood overlay */
+
+#bloodRain{
+  position:fixed;
+  inset:0;
+  z-index:14;
+  pointer-events:none;
+  opacity:0;
+
+  background:
+    linear-gradient(
+      rgba(120,0,0,.05),
+      rgba(50,0,0,.12)
+    );
+
+  transition:opacity .5s;
+}
+
+/* vignette */
+
+#vignette{
+  position:fixed;
+  inset:0;
+  z-index:13;
+  pointer-events:none;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 35%,
+      rgba(0,0,0,.45) 70%,
+      rgba(0,0,0,.9) 100%
+    );
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+#mobileControls{
+  display:none;
+}
+
+@media(max-width:800px){
+
+  #help{
+    display:none;
+  }
+
+  #mobileControls{
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:16;
+    pointer-events:none;
+  }
+
+  .mobileButton{
+    pointer-events:auto;
+
+    position:absolute;
+
+    width:60px;
+    height:60px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.2);
+
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  #jump{
+    right:25px;
+    bottom:40px;
+  }
+
+  #forward{
+    left:75px;
+    bottom:120px;
+  }
+
+  #back{
+    left:75px;
+    bottom:20px;
+  }
+
+  #left{
+    left:10px;
+    bottom:70px;
+  }
+
+  #right{
+    left:140px;
+    bottom:70px;
+  }
 }
 </style>
 </head>
@@ -214,84 +364,142 @@ button:disabled{
 
 <canvas id="game"></canvas>
 
-<!-- START -->
+<div id="crosshair"></div>
+
+<div id="bloodRain"></div>
+
+<div id="vignette"></div>
+
+
+<!-- =========================
+     START
+========================= -->
+
 <div id="startScreen" class="screen">
+
   <div class="panel">
 
     <h1>IMPOSTER</h1>
-    <div class="subtitle">Multiplayer</div>
 
-    <input id="nameInput"
-           maxlength="16"
-           placeholder="Dein Name">
+    <div class="subtitle">
+      CREEPY CEMETERY
+    </div>
 
-    <input id="roomInput"
-           maxlength="8"
-           placeholder="Raumcode">
+    <input
+      id="nameInput"
+      maxlength="16"
+      placeholder="Dein Name">
+
+    <input
+      id="roomInput"
+      maxlength="10"
+      placeholder="Raumcode">
 
     <button id="joinBtn">
-      Raum betreten
+      SPIEL BEITRETEN
     </button>
 
     <div id="error" class="error"></div>
 
-    <div class="small">
-      Gib mit anderen Spielern denselben Raumcode ein.
-    </div>
-
   </div>
+
 </div>
 
-<!-- LOBBY -->
+
+<!-- =========================
+     LOBBY
+========================= -->
+
 <div id="lobby" class="screen">
+
   <div class="panel">
 
-    <div class="lobbyTitle">
-      Lobby
-    </div>
+    <h1 style="font-size:28px">
+      LOBBY
+    </h1>
 
-    <div class="roomCode">
+    <div class="room">
       <span id="roomLabel">----</span>
     </div>
 
-    <div id="playerList" class="playerList"></div>
+    <div id="playerList"></div>
 
     <button id="readyBtn">
       BEREIT
     </button>
 
-    <button id="startGame" disabled>
+    <button id="startBtn" disabled>
       SPIEL STARTEN
     </button>
 
     <div id="lobbyError" class="error"></div>
 
-    <div class="small">
-      Alle Spieler müssen bereit sein.
-    </div>
-
   </div>
+
 </div>
 
-<!-- GAME UI -->
+
+<!-- =========================
+     GAME UI
+========================= -->
+
 <div id="gameUI">
 
-  <div class="hud">
-    <div class="hudTitle">
-      <span id="myName">Spieler</span>
+  <div id="hud">
+
+    <div id="hudName">
+      Spieler
     </div>
-    <div id="status">
-      Runde läuft
+
+    <div id="hudStatus">
+      Friedhof
     </div>
+
   </div>
 
-  <div class="controls">
-    WASD / Pfeiltasten = Bewegen
+  <div id="help">
+    WASD = Bewegen · SPACE = Springen · Maus = Umschauen · ESC = Maus freigeben
   </div>
 
 </div>
 
+
+<!-- MOBILE -->
+
+<div id="mobileControls">
+
+  <div class="mobileButton" id="forward">
+    ▲
+  </div>
+
+  <div class="mobileButton" id="back">
+    ▼
+  </div>
+
+  <div class="mobileButton" id="left">
+    ◀
+  </div>
+
+  <div class="mobileButton" id="right">
+    ▶
+  </div>
+
+  <div class="mobileButton" id="jump">
+    JUMP
+  </div>
+
+</div>
+
+
 <script type="module">
+
+/* =========================================================
+   THREE.JS
+========================================================= */
+
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
 
 /* =========================================================
    FIREBASE
@@ -299,7 +507,8 @@ button:disabled{
 
 import {
   initializeApp
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+} from
+"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
 import {
   getDatabase,
@@ -311,271 +520,1256 @@ import {
   onDisconnect,
   push,
   get
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+} from
+"https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC2ugqU6kHUbbdTbK4gSVuVtVCFZAwNuqg",
-  authDomain: "impostergamegpt.firebaseapp.com",
-  databaseURL: "https://impostergamegpt-default-rtdb.firebaseio.com",
-  projectId: "impostergamegpt",
-  storageBucket: "impostergamegpt.firebasestorage.app",
-  messagingSenderId: "677628119976",
-  appId: "1:677628119976:web:6172cd9c82eecd29c4ab9d"
+
+  apiKey:
+  "AIzaSyC2ugqU6kHUbbdTbK4gSVuVtVCFZAwNuqg",
+
+  authDomain:
+  "impostergamegpt.firebaseapp.com",
+
+  databaseURL:
+  "https://impostergamegpt-default-rtdb.firebaseio.com",
+
+  projectId:
+  "impostergamegpt",
+
+  storageBucket:
+  "impostergamegpt.firebasestorage.app",
+
+  messagingSenderId:
+  "677628119976",
+
+  appId:
+  "1:677628119976:web:6172cd9c82eecd29c4ab9d"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getDatabase(app);
 
 
 /* =========================================================
    DOM
 ========================================================= */
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas =
+document.getElementById("game");
 
-const startScreen = document.getElementById("startScreen");
-const lobby = document.getElementById("lobby");
-const gameUI = document.getElementById("gameUI");
+const startScreen =
+document.getElementById("startScreen");
 
-const nameInput = document.getElementById("nameInput");
-const roomInput = document.getElementById("roomInput");
+const lobby =
+document.getElementById("lobby");
 
-const joinBtn = document.getElementById("joinBtn");
-const readyBtn = document.getElementById("readyBtn");
-const startGameBtn = document.getElementById("startGame");
+const gameUI =
+document.getElementById("gameUI");
 
-const playerList = document.getElementById("playerList");
+const nameInput =
+document.getElementById("nameInput");
 
-const roomLabel = document.getElementById("roomLabel");
-const errorBox = document.getElementById("error");
-const lobbyError = document.getElementById("lobbyError");
+const roomInput =
+document.getElementById("roomInput");
 
-const myNameUI = document.getElementById("myName");
-const statusUI = document.getElementById("status");
+const joinBtn =
+document.getElementById("joinBtn");
+
+const readyBtn =
+document.getElementById("readyBtn");
+
+const startBtn =
+document.getElementById("startBtn");
+
+const playerList =
+document.getElementById("playerList");
+
+const roomLabel =
+document.getElementById("roomLabel");
+
+const errorBox =
+document.getElementById("error");
+
+const lobbyError =
+document.getElementById("lobbyError");
+
+const hudName =
+document.getElementById("hudName");
+
+const hudStatus =
+document.getElementById("hudStatus");
+
+const bloodOverlay =
+document.getElementById("bloodRain");
 
 
 /* =========================================================
-   CANVAS
+   THREE SCENE
 ========================================================= */
 
-function resize(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+const scene =
+new THREE.Scene();
+
+scene.background =
+new THREE.Color(0x020507);
+
+scene.fog =
+new THREE.FogExp2(
+  0x05080a,
+  0.012
+);
+
+
+/* CAMERA */
+
+const camera =
+new THREE.PerspectiveCamera(
+  75,
+  innerWidth/innerHeight,
+  0.1,
+  1000
+);
+
+camera.position.set(
+  0,
+  1.7,
+  5
+);
+
+
+/* RENDERER */
+
+const renderer =
+new THREE.WebGLRenderer({
+  canvas,
+  antialias:true
+});
+
+renderer.setSize(
+  innerWidth,
+  innerHeight
+);
+
+renderer.setPixelRatio(
+  Math.min(devicePixelRatio,2)
+);
+
+renderer.shadowMap.enabled=true;
+
+renderer.shadowMap.type =
+THREE.PCFSoftShadowMap;
+
+
+/* =========================================================
+   LIGHTING
+========================================================= */
+
+const ambient =
+new THREE.HemisphereLight(
+  0x27313a,
+  0x030303,
+  0.65
+);
+
+scene.add(ambient);
+
+
+const moon =
+new THREE.DirectionalLight(
+  0x8da8ff,
+  1.1
+);
+
+moon.position.set(
+  -80,
+  100,
+  -50
+);
+
+moon.castShadow=true;
+
+moon.shadow.mapSize.width=2048;
+moon.shadow.mapSize.height=2048;
+
+moon.shadow.camera.left=-100;
+moon.shadow.camera.right=100;
+moon.shadow.camera.top=100;
+moon.shadow.camera.bottom=-100;
+
+scene.add(moon);
+
+
+/* =========================================================
+   WORLD
+========================================================= */
+
+const world =
+new THREE.Group();
+
+scene.add(world);
+
+
+/* GROUND */
+
+const groundMat =
+new THREE.MeshStandardMaterial({
+  color:0x101713,
+  roughness:1
+});
+
+const ground =
+new THREE.Mesh(
+  new THREE.PlaneGeometry(
+    240,
+    240
+  ),
+  groundMat
+);
+
+ground.rotation.x =
+-Math.PI/2;
+
+ground.receiveShadow=true;
+
+world.add(ground);
+
+
+/* =========================================================
+   MATERIALS
+========================================================= */
+
+const stoneMat =
+new THREE.MeshStandardMaterial({
+  color:0x414447,
+  roughness:.9
+});
+
+const darkStoneMat =
+new THREE.MeshStandardMaterial({
+  color:0x292d2f,
+  roughness:1
+});
+
+const woodMat =
+new THREE.MeshStandardMaterial({
+  color:0x241a16,
+  roughness:1
+});
+
+const grassMat =
+new THREE.MeshStandardMaterial({
+  color:0x16251a,
+  roughness:1
+});
+
+const metalMat =
+new THREE.MeshStandardMaterial({
+  color:0x222528,
+  metalness:.6,
+  roughness:.7
+});
+
+
+/* =========================================================
+   OBJECT COLLIDERS
+========================================================= */
+
+const colliders=[];
+
+
+/* =========================================================
+   BOX OBJECT
+========================================================= */
+
+function addBox(
+  x,y,z,
+  sx,sy,sz,
+  material,
+  collision=true
+){
+
+  const mesh =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      sx,sy,sz
+    ),
+    material
+  );
+
+  mesh.position.set(
+    x,y,z
+  );
+
+  mesh.castShadow=true;
+  mesh.receiveShadow=true;
+
+  world.add(mesh);
+
+
+  if(collision){
+
+    colliders.push({
+      x:x,
+      z:z,
+      w:sx/2,
+      d:sz/2
+    });
+
+  }
+
+  return mesh;
 }
 
-window.addEventListener("resize",resize);
-resize();
+
+/* =========================================================
+   GRAVE
+========================================================= */
+
+function createGrave(
+  x,z,rot=0
+){
+
+  const group =
+  new THREE.Group();
+
+  group.position.set(
+    x,
+    0,
+    z
+  );
+
+  group.rotation.y=rot;
+
+  const stone =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      1.05,
+      1.3,
+      .25
+    ),
+    stoneMat
+  );
+
+  stone.position.y=.65;
+
+  stone.castShadow=true;
+  stone.receiveShadow=true;
+
+  group.add(stone);
+
+
+  /* rounded-looking top */
+
+  const top =
+  new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      .525,
+      .525,
+      .25,
+      12,
+      1,
+      false,
+      0,
+      Math.PI
+    ),
+    stoneMat
+  );
+
+  top.rotation.z=
+  Math.PI/2;
+
+  top.position.set(
+    0,
+    1.3,
+    0
+  );
+
+  group.add(top);
+
+
+  /* cross */
+
+  if(Math.random()<.35){
+
+    const crossV =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        .12,
+        .8,
+        .12
+      ),
+      darkStoneMat
+    );
+
+    crossV.position.set(
+      0,
+      1.45,
+      -.1
+    );
+
+    group.add(crossV);
+
+
+    const crossH =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        .5,
+        .12,
+        .12
+      ),
+      darkStoneMat
+    );
+
+    crossH.position.set(
+      0,
+      1.58,
+      -.1
+    );
+
+    group.add(crossH);
+
+  }
+
+
+  world.add(group);
+
+
+  colliders.push({
+    x:x,
+    z:z,
+    w:.6,
+    d:.45
+  });
+
+}
 
 
 /* =========================================================
-   GAME VARIABLES
+   CREATE CEMETERY
 ========================================================= */
 
-let roomCode = "";
-let playerId = "";
-let playerName = "";
+for(let x=-90;x<=90;x+=10){
 
-let isHost = false;
-let isReady = false;
-let gameStarted = false;
+  for(let z=-90;z<=90;z+=12){
 
-let players = {};
+    if(
+      Math.random()<.52 &&
+      Math.abs(x)>8
+    ){
 
-let keys = {};
+      createGrave(
+        x+(Math.random()-.5)*3,
+        z+(Math.random()-.5)*3,
+        (Math.random()-.5)*.3
+      );
 
-const me = {
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   MAUSOLEUM
+========================================================= */
+
+function createMausoleum(
+  x,z
+){
+
+  addBox(
+    x,
+    2.5,
+    z,
+    8,
+    5,
+    7,
+    darkStoneMat,
+    true
+  );
+
+
+  /* roof */
+
+  const roof =
+  new THREE.Mesh(
+    new THREE.ConeGeometry(
+      5.8,
+      2.5,
+      4
+    ),
+    stoneMat
+  );
+
+  roof.position.set(
+    x,
+    6.2,
+    z
+  );
+
+  roof.rotation.y=
+  Math.PI/4;
+
+  roof.castShadow=true;
+
+  world.add(roof);
+
+
+  /* entrance */
+
+  addBox(
+    x,
+    1.5,
+    z-3.55,
+    2.5,
+    3,
+    .3,
+    woodMat,
+    false
+  );
+
+}
+
+
+createMausoleum(
+  -28,-28
+);
+
+createMausoleum(
+  32,35
+);
+
+
+/* =========================================================
+   FENCES
+========================================================= */
+
+function createFence(
+  x,z,length,rotation=0
+){
+
+  const group =
+  new THREE.Group();
+
+  group.position.set(
+    x,0,z
+  );
+
+  group.rotation.y=
+  rotation;
+
+
+  for(
+    let i=-length/2;
+    i<=length/2;
+    i+=3
+  ){
+
+    const post =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        .16,
+        1.6,
+        .16
+      ),
+      metalMat
+    );
+
+    post.position.set(
+      i,
+      .8,
+      0
+    );
+
+    post.castShadow=true;
+
+    group.add(post);
+
+  }
+
+
+  const bar =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      length,
+      .12,
+      .12
+    ),
+    metalMat
+  );
+
+  bar.position.y=1.05;
+
+  group.add(bar);
+
+  world.add(group);
+
+}
+
+
+createFence(
+  -65,0,50
+);
+
+createFence(
+  65,0,50
+);
+
+
+/* =========================================================
+   TREES
+========================================================= */
+
+function createTree(
+  x,z
+){
+
+  const trunk =
+  new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      .35,
+      .5,
+      5,
+      7
+    ),
+    woodMat
+  );
+
+  trunk.position.set(
+    x,
+    2.5,
+    z
+  );
+
+  trunk.castShadow=true;
+
+  world.add(trunk);
+
+
+  for(let i=0;i<3;i++){
+
+    const crown =
+    new THREE.Mesh(
+      new THREE.ConeGeometry(
+        2.8-i*.45,
+        4,
+        7
+      ),
+      grassMat
+    );
+
+    crown.position.set(
+      x,
+      5+i*1.8,
+      z
+    );
+
+    crown.castShadow=true;
+
+    world.add(crown);
+
+  }
+
+
+  colliders.push({
+    x:x,
+    z:z,
+    w:.7,
+    d:.7
+  });
+
+}
+
+
+/* random trees */
+
+for(let i=0;i<65;i++){
+
+  let x =
+  -105+Math.random()*210;
+
+  let z =
+  -105+Math.random()*210;
+
+  if(
+    Math.abs(x)<45 &&
+    Math.abs(z)<45
+  ){
+    continue;
+  }
+
+  createTree(x,z);
+
+}
+
+
+/* =========================================================
+   LANTERNS
+========================================================= */
+
+function createLamp(
+  x,z
+){
+
+  const pole =
+  new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      .08,.08,4,8
+    ),
+    metalMat
+  );
+
+  pole.position.set(
+    x,2,z
+  );
+
+  pole.castShadow=true;
+
+  world.add(pole);
+
+
+  const lamp =
+  new THREE.PointLight(
+    0xffb35c,
+    2.2,
+    15
+  );
+
+  lamp.position.set(
+    x,
+    4.2,
+    z
+  );
+
+  world.add(lamp);
+
+
+  const bulb =
+  new THREE.Mesh(
+    new THREE.SphereGeometry(
+      .16,12,12
+    ),
+    new THREE.MeshBasicMaterial({
+      color:0xffc477
+    })
+  );
+
+  bulb.position.copy(
+    lamp.position
+  );
+
+  world.add(bulb);
+
+}
+
+
+createLamp(
+  -20,-10
+);
+
+createLamp(
+  20,-10
+);
+
+createLamp(
+  -20,25
+);
+
+createLamp(
+  20,25
+);
+
+createLamp(
+  0,-55
+);
+
+createLamp(
+  0,55
+);
+
+
+/* =========================================================
+   CENTRAL PATH
+========================================================= */
+
+const pathMat =
+new THREE.MeshStandardMaterial({
+  color:0x29251f,
+  roughness:1
+});
+
+function createPath(
+  x,z,sx,sz
+){
+
+  const path =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      sx,.03,sz
+    ),
+    pathMat
+  );
+
+  path.position.set(
+    x,.02,z
+  );
+
+  path.receiveShadow=true;
+
+  world.add(path);
+
+}
+
+createPath(
+  0,0,
+  10,210
+);
+
+createPath(
+  0,0,
+  210,10
+);
+
+
+/* =========================================================
+   MOON
+========================================================= */
+
+const moonMesh =
+new THREE.Mesh(
+  new THREE.SphereGeometry(
+    7,32,32
+  ),
+  new THREE.MeshBasicMaterial({
+    color:0xcbd7df
+  })
+);
+
+moonMesh.position.set(
+  -70,
+  90,
+  -90
+);
+
+scene.add(moonMesh);
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+let roomCode="";
+let playerId="";
+let playerName="";
+
+let isHost=false;
+let isReady=false;
+let gameStarted=false;
+
+let players={};
+
+
+/* =========================================================
+   LOCAL PLAYER
+========================================================= */
+
+const player={
   x:0,
-  y:0,
-  speed:190,
-  radius:16,
-  color:"#4d7cff"
+  y:1.7,
+  z:15,
+
+  vx:0,
+  vy:0,
+  vz:0,
+
+  radius:.42,
+
+  speed:5.5,
+
+  onGround:true,
+
+  color:"#5577ff"
 };
 
-let camera = {
-  x:0,
-  y:0
-};
+
+/* =========================================================
+   PLAYER VISUALS
+========================================================= */
+
+const remoteMeshes={};
+
+
+function createRemotePlayer(
+  color
+){
+
+  const group =
+  new THREE.Group();
+
+
+  const body =
+  new THREE.Mesh(
+    new THREE.CapsuleGeometry(
+      .35,
+      1,
+      5,
+      10
+    ),
+    new THREE.MeshStandardMaterial({
+      color:new THREE.Color(color)
+    })
+  );
+
+  body.position.y=.9;
+
+  body.castShadow=true;
+
+  group.add(body);
+
+
+  const head =
+  new THREE.Mesh(
+    new THREE.SphereGeometry(
+      .3,
+      16,
+      16
+    ),
+    new THREE.MeshStandardMaterial({
+      color:0xd5a184
+    })
+  );
+
+  head.position.y=1.85;
+
+  head.castShadow=true;
+
+  group.add(head);
+
+
+  world.add(group);
+
+  return group;
+}
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function collisionAt(
+  x,z
+){
+
+  for(
+    const c of colliders
+  ){
+
+    const dx =
+      Math.max(
+        Math.abs(x-c.x)-c.w,
+        0
+      );
+
+    const dz =
+      Math.max(
+        Math.abs(z-c.z)-c.d,
+        0
+      );
+
+    if(
+      dx*dx+dz*dz <
+      player.radius*
+      player.radius
+    ){
+
+      return true;
+    }
+
+  }
+
+  return false;
+}
 
 
 /* =========================================================
    INPUT
 ========================================================= */
 
-window.addEventListener("keydown",e=>{
-  keys[e.key.toLowerCase()] = true;
+const keys={};
 
-  if([
-    "arrowup",
-    "arrowdown",
-    "arrowleft",
-    "arrowright",
-    " "
-  ].includes(e.key.toLowerCase())){
-    e.preventDefault();
+window.addEventListener(
+  "keydown",
+  e=>{
+
+    keys[
+      e.key.toLowerCase()
+    ]=true;
+
+    if(
+      e.code==="Space"
+    ){
+
+      keys.space=true;
+
+    }
+
   }
-});
+);
 
-window.addEventListener("keyup",e=>{
-  keys[e.key.toLowerCase()] = false;
-});
+
+window.addEventListener(
+  "keyup",
+  e=>{
+
+    keys[
+      e.key.toLowerCase()
+    ]=false;
+
+    if(
+      e.code==="Space"
+    ){
+
+      keys.space=false;
+
+    }
+
+  }
+);
 
 
 /* =========================================================
-   RANDOM COLOR
+   MOUSE FPS
 ========================================================= */
 
-const colors = [
-  "#4d7cff",
-  "#ff4d5e",
-  "#49d17d",
-  "#f0b84b",
-  "#a96cff",
-  "#36c7d8",
-  "#ff7b3d",
-  "#ec62c0",
-  "#8fd14f",
-  "#d9d9d9"
-];
+let yaw=0;
+let pitch=0;
 
-function randomColor(){
-  return colors[Math.floor(Math.random()*colors.length)];
-}
+let mouseLocked=false;
+
+document.addEventListener(
+  "click",
+  ()=>{
+
+    if(gameStarted){
+
+      document.body.requestPointerLock();
+
+    }
+
+  }
+);
+
+
+document.addEventListener(
+  "pointerlockchange",
+  ()=>{
+
+    mouseLocked =
+      document.pointerLockElement ===
+      document.body;
+
+  }
+);
+
+
+document.addEventListener(
+  "mousemove",
+  e=>{
+
+    if(!mouseLocked)
+      return;
+
+    yaw -=
+      e.movementX*0.0025;
+
+    pitch -=
+      e.movementY*0.0025;
+
+    pitch =
+      Math.max(
+        -1.45,
+        Math.min(
+          1.45,
+          pitch
+        )
+      );
+
+  }
+);
 
 
 /* =========================================================
-   JOIN ROOM
+   FIREBASE JOIN
 ========================================================= */
 
-joinBtn.addEventListener("click",joinRoom);
-
-roomInput.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    joinRoom();
-  }
-});
-
-nameInput.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    joinRoom();
-  }
-});
+joinBtn.addEventListener(
+  "click",
+  joinRoom
+);
 
 
 async function joinRoom(){
 
   errorBox.textContent="";
 
-  playerName = nameInput.value.trim();
-  roomCode = roomInput.value.trim().toUpperCase();
+  playerName =
+    nameInput.value.trim();
+
+  roomCode =
+    roomInput.value
+      .trim()
+      .toUpperCase();
+
 
   if(!playerName){
-    errorBox.textContent="Bitte Namen eingeben.";
+
+    errorBox.textContent=
+      "Bitte Namen eingeben.";
+
     return;
+
   }
+
 
   if(!roomCode){
-    errorBox.textContent="Bitte Raumcode eingeben.";
+
+    errorBox.textContent=
+      "Bitte Raumcode eingeben.";
+
     return;
+
   }
 
-  if(roomCode.length < 2){
-    errorBox.textContent="Der Raumcode ist zu kurz.";
-    return;
-  }
 
   joinBtn.disabled=true;
-  joinBtn.textContent="Verbinde...";
+
 
   try{
 
-    const roomPlayersRef =
-      ref(db,"rooms/"+roomCode+"/players");
+    const playersRef =
+      ref(
+        db,
+        "rooms/"+roomCode+
+        "/players"
+      );
 
-    const snapshot =
-      await get(roomPlayersRef);
 
-    let currentPlayers =
-      snapshot.exists()
-      ? snapshot.val()
+    const snap =
+      await get(playersRef);
+
+
+    const current =
+      snap.exists()
+      ? snap.val()
       : {};
 
+
     const count =
-      Object.keys(currentPlayers).length;
+      Object.keys(current).length;
 
-    if(count >= 10){
 
-      errorBox.textContent =
+    if(count>=10){
+
+      errorBox.textContent=
         "Der Raum ist voll.";
 
       joinBtn.disabled=false;
-      joinBtn.textContent="Raum betreten";
 
       return;
+
     }
 
 
-    const newPlayerRef =
-      push(roomPlayersRef);
-
-    playerId = newPlayerRef.key;
-
-    isHost = count === 0;
-
-    isReady = false;
+    const newRef =
+      push(playersRef);
 
 
-    me.x =
-      500 + Math.random()*200;
+    playerId =
+      newRef.key;
 
-    me.y =
-      500 + Math.random()*200;
 
-    me.color =
+    isHost =
+      count===0;
+
+
+    player.color =
       randomColor();
 
 
-    await set(newPlayerRef,{
-      name:playerName,
-      x:me.x,
-      y:me.y,
-      color:me.color,
-      ready:false,
-      host:isHost,
-      online:true
-    });
+    player.x =
+      (Math.random()-.5)*30;
+
+    player.z =
+      (Math.random()-.5)*30;
 
 
-    onDisconnect(newPlayerRef)
-      .remove();
+    await set(
+      newRef,
+      {
+
+        name:playerName,
+
+        x:player.x,
+
+        y:player.y,
+
+        z:player.z,
+
+        color:player.color,
+
+        ready:false,
+
+        host:isHost,
+
+        online:true
+
+      }
+    );
 
 
-    roomLabel.textContent =
+    onDisconnect(
+      newRef
+    ).remove();
+
+
+    roomLabel.textContent=
       roomCode;
 
-    myNameUI.textContent =
+
+    hudName.textContent=
       playerName;
 
 
-    startScreen.style.display="none";
-    lobby.style.display="flex";
+    startScreen.style.display=
+      "none";
+
+    lobby.style.display=
+      "flex";
 
 
-    listenToPlayers();
-    listenToGame();
+    listenPlayers();
+    listenStarted();
 
 
   }catch(err){
 
     console.error(err);
 
-    errorBox.textContent =
-      "Firebase-Fehler: "+err.message;
+    errorBox.textContent=
+      "Firebase Fehler: "+
+      err.message;
 
     joinBtn.disabled=false;
-    joinBtn.textContent="Raum betreten";
+
   }
+
 }
 
 
@@ -583,97 +1777,97 @@ async function joinRoom(){
    PLAYER LISTENER
 ========================================================= */
 
-function listenToPlayers(){
+function listenPlayers(){
 
-  const playersRef =
-    ref(db,"rooms/"+roomCode+"/players");
+  const r =
+    ref(
+      db,
+      "rooms/"+roomCode+
+      "/players"
+    );
 
-  onValue(playersRef,snapshot=>{
 
-    players =
-      snapshot.exists()
-      ? snapshot.val()
-      : {};
+  onValue(
+    r,
+    snap=>{
 
-    renderPlayerList();
+      players =
+        snap.exists()
+        ? snap.val()
+        : {};
 
-    updateStartButton();
 
-    if(gameStarted){
-      statusUI.textContent =
-        Object.keys(players).length+
-        " Spieler online";
+      renderLobby();
+
+      updateStartButton();
+
+      updateRemotePlayers();
+
     }
+  );
 
-  });
 }
 
 
 /* =========================================================
-   PLAYER LIST
+   LOBBY
 ========================================================= */
 
-function renderPlayerList(){
+function renderLobby(){
 
   playerList.innerHTML="";
 
-  const ids =
-    Object.keys(players);
-
-  if(ids.length===0){
-
-    playerList.innerHTML =
-      "<div style='text-align:center;color:#777'>Keine Spieler</div>";
-
-    return;
-  }
-
-
-  ids.forEach(id=>{
+  Object.keys(players)
+  .forEach(id=>{
 
     const p =
       players[id];
 
-    const row =
-      document.createElement("div");
 
-    row.className="player";
+    const row =
+      document.createElement(
+        "div"
+      );
+
+    row.className=
+      "player";
 
 
     const left =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
-    left.className="playerLeft";
+    left.className=
+      "playerLeft";
 
 
     const dot =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
-    dot.className="dot";
+    dot.className=
+      "dot";
 
-    dot.style.background =
+    dot.style.background=
       p.color || "#fff";
 
 
     const name =
-      document.createElement("span");
+      document.createElement(
+        "span"
+      );
 
-    name.textContent =
+    name.textContent=
       p.name || "Spieler";
 
 
     if(p.host){
 
-      const host =
-        document.createElement("span");
-
-      host.textContent =
+      name.textContent +=
         " ★";
 
-      host.style.color =
-        "#ffd75a";
-
-      name.appendChild(host);
     }
 
 
@@ -682,24 +1876,27 @@ function renderPlayerList(){
 
 
     const state =
-      document.createElement("span");
+      document.createElement(
+        "span"
+      );
 
 
     if(p.ready){
 
-      state.textContent =
+      state.textContent=
         "BEREIT";
 
-      state.className =
+      state.className=
         "ready";
 
     }else{
 
-      state.textContent =
+      state.textContent=
         "WARTET";
 
-      state.className =
-        "notReady";
+      state.className=
+        "waiting";
+
     }
 
 
@@ -717,36 +1914,33 @@ function renderPlayerList(){
    READY
 ========================================================= */
 
-readyBtn.addEventListener("click",async()=>{
+readyBtn.addEventListener(
+  "click",
+  async()=>{
 
-  if(!playerId) return;
+    isReady=
+      !isReady;
 
-  isReady = !isReady;
 
-  const playerRef =
-    ref(
-      db,
-      "rooms/"+roomCode+
-      "/players/"+playerId
+    await update(
+      ref(
+        db,
+        "rooms/"+roomCode+
+        "/players/"+playerId
+      ),
+      {
+        ready:isReady
+      }
     );
 
-  await update(playerRef,{
-    ready:isReady
-  });
 
+    readyBtn.textContent=
+      isReady
+      ? "NICHT BEREIT"
+      : "BEREIT";
 
-  if(isReady){
-
-    readyBtn.textContent =
-      "NICHT BEREIT";
-
-  }else{
-
-    readyBtn.textContent =
-      "BEREIT";
   }
-
-});
+);
 
 
 /* =========================================================
@@ -755,108 +1949,115 @@ readyBtn.addEventListener("click",async()=>{
 
 function updateStartButton(){
 
-  const ids =
-    Object.keys(players);
-
   if(!isHost){
 
-    startGameBtn.style.display =
+    startBtn.style.display=
       "none";
 
     return;
+
   }
 
-  startGameBtn.style.display =
+
+  startBtn.style.display=
     "block";
 
 
-  if(ids.length===0){
-
-    startGameBtn.disabled=true;
-    return;
-  }
+  const ids =
+    Object.keys(players);
 
 
   const allReady =
-    ids.every(id=>
-      players[id].ready === true
+    ids.length>0 &&
+    ids.every(
+      id=>
+        players[id].ready===true
     );
 
 
-  startGameBtn.disabled =
+  startBtn.disabled=
     !allReady;
 
 
-  if(allReady){
-
-    startGameBtn.textContent =
-      "SPIEL STARTEN";
-
-  }else{
-
-    startGameBtn.textContent =
-      "ALLE MÜSSEN BEREIT SEIN";
-  }
+  startBtn.textContent=
+    allReady
+    ? "SPIEL STARTEN"
+    : "ALLE MÜSSEN BEREIT SEIN";
 
 }
 
 
 /* =========================================================
-   HOST START
+   START
 ========================================================= */
 
-startGameBtn.addEventListener("click",async()=>{
+startBtn.addEventListener(
+  "click",
+  async()=>{
 
-  if(!isHost) return;
-
-  const ids =
-    Object.keys(players);
-
-  if(ids.length===0) return;
+    if(!isHost)
+      return;
 
 
-  const allReady =
-    ids.every(id=>
-      players[id].ready === true
+    const ids =
+      Object.keys(players);
+
+
+    const allReady =
+      ids.length>0 &&
+      ids.every(
+        id=>
+          players[id].ready===true
+      );
+
+
+    if(!allReady){
+
+      lobbyError.textContent=
+        "Noch nicht alle bereit.";
+
+      return;
+
+    }
+
+
+    await set(
+      ref(
+        db,
+        "rooms/"+roomCode+
+        "/started"
+      ),
+      true
     );
 
-
-  if(!allReady){
-
-    lobbyError.textContent =
-      "Noch nicht alle bereit.";
-
-    return;
   }
-
-
-  await set(
-    ref(db,"rooms/"+roomCode+"/started"),
-    true
-  );
-
-});
+);
 
 
 /* =========================================================
-   GAME LISTENER
+   GAME START LISTENER
 ========================================================= */
 
-function listenToGame(){
+function listenStarted(){
 
-  const gameRef =
-    ref(db,"rooms/"+roomCode+"/started");
+  onValue(
+    ref(
+      db,
+      "rooms/"+roomCode+
+      "/started"
+    ),
+    snap=>{
 
-  onValue(gameRef,snapshot=>{
+      if(
+        snap.val()===true
+      ){
 
-    const started =
-      snapshot.val() === true;
+        startGame();
 
-    if(started){
-      startGame();
+      }
+
     }
-
-  });
+  );
 
 }
 
@@ -867,757 +2068,501 @@ function listenToGame(){
 
 function startGame(){
 
-  if(gameStarted) return;
+  if(gameStarted)
+    return;
+
 
   gameStarted=true;
 
-  lobby.style.display="none";
-  gameUI.style.display="block";
+  lobby.style.display=
+    "none";
 
-  statusUI.textContent =
-    "Runde läuft";
+  gameUI.style.display=
+    "block";
 
-  requestAnimationFrame(gameLoop);
+
+  camera.position.set(
+    player.x,
+    player.y,
+    player.z
+  );
+
+
+  renderer.domElement
+    .requestPointerLock();
+
+
+  lastTime=
+    performance.now();
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
 
 }
 
 
 /* =========================================================
-   MAP
+   REMOTE PLAYERS
 ========================================================= */
 
-const map = {
+function updateRemotePlayers(){
 
-  width:5000,
-  height:5000,
-
-  houses:[
-    {x:400,y:350,w:500,h:350},
-    {x:1500,y:500,w:600,h:400},
-    {x:2900,y:350,w:750,h:450},
-    {x:800,y:1500,w:700,h:450},
-    {x:2200,y:1500,w:500,h:350},
-    {x:3600,y:1500,w:650,h:500},
-    {x:400,y:2900,w:700,h:450},
-    {x:1700,y:2700,w:650,h:500},
-    {x:3000,y:2900,w:850,h:450},
-    {x:4100,y:3800,w:550,h:450}
-  ],
-
-  trees:[],
-
-  rocks:[]
-};
+  if(!gameStarted)
+    return;
 
 
-/* =========================================================
-   CREATE TREES
-========================================================= */
-
-for(let i=0;i<180;i++){
-
-  let x =
-    100+Math.random()*4800;
-
-  let y =
-    100+Math.random()*4800;
-
-  let blocked =
-    map.houses.some(h=>
-      x>h.x-80 &&
-      x<h.x+h.w+80 &&
-      y>h.y-80 &&
-      y<h.y+h.h+80
-    );
-
-  if(!blocked){
-
-    map.trees.push({
-      x,
-      y,
-      r:28
-    });
-
-  }
-}
-
-
-/* =========================================================
-   CREATE ROCKS
-========================================================= */
-
-for(let i=0;i<80;i++){
-
-  let x =
-    100+Math.random()*4800;
-
-  let y =
-    100+Math.random()*4800;
-
-  let blocked =
-    map.houses.some(h=>
-      x>h.x-50 &&
-      x<h.x+h.w+50 &&
-      y>h.y-50 &&
-      y<h.y+h.h+50
-    );
-
-  if(!blocked){
-
-    map.rocks.push({
-      x,
-      y,
-      r:18
-    });
-
-  }
-}
-
-
-/* =========================================================
-   COLLISION
-========================================================= */
-
-function circleRectCollision(
-  cx,cy,r,rect
-){
-
-  const closestX =
-    Math.max(
-      rect.x,
-      Math.min(cx,rect.x+rect.w)
-    );
-
-  const closestY =
-    Math.max(
-      rect.y,
-      Math.min(cy,rect.y+rect.h)
-    );
-
-  const dx =
-    cx-closestX;
-
-  const dy =
-    cy-closestY;
-
-  return dx*dx+dy*dy < r*r;
-}
-
-
-function blocked(x,y){
-
-  for(const h of map.houses){
-
-    if(
-      circleRectCollision(
-        x,y,me.radius,h
-      )
-    ){
-      return true;
-    }
-
-  }
-
-
-  for(const t of map.trees){
-
-    const dx=x-t.x;
-    const dy=y-t.y;
-
-    const dist =
-      Math.sqrt(dx*dx+dy*dy);
-
-    if(
-      dist <
-      me.radius+t.r
-    ){
-      return true;
-    }
-
-  }
-
-
-  for(const r of map.rocks){
-
-    const dx=x-r.x;
-    const dy=y-r.y;
-
-    const dist =
-      Math.sqrt(dx*dx+dy*dy);
-
-    if(
-      dist <
-      me.radius+r.r
-    ){
-      return true;
-    }
-
-  }
-
-
-  return false;
-}
-
-
-/* =========================================================
-   MOVEMENT
-========================================================= */
-
-let lastTime =
-  performance.now();
-
-let sendTimer=0;
-
-function updateGame(dt){
-
-  let dx=0;
-  let dy=0;
-
-
-  if(
-    keys["w"] ||
-    keys["arrowup"]
+  for(
+    const id of Object.keys(players)
   ){
-    dy-=1;
-  }
-
-  if(
-    keys["s"] ||
-    keys["arrowdown"]
-  ){
-    dy+=1;
-  }
-
-  if(
-    keys["a"] ||
-    keys["arrowleft"]
-  ){
-    dx-=1;
-  }
-
-  if(
-    keys["d"] ||
-    keys["arrowright"]
-  ){
-    dx+=1;
-  }
-
-
-  if(dx!==0 || dy!==0){
-
-    const len =
-      Math.sqrt(dx*dx+dy*dy);
-
-    dx/=len;
-    dy/=len;
-
-
-    const nx =
-      me.x+
-      dx*me.speed*dt;
-
-    const ny =
-      me.y+
-      dy*me.speed*dt;
-
-
-    if(!blocked(nx,me.y)){
-      me.x=nx;
-    }
-
-    if(!blocked(me.x,ny)){
-      me.y=ny;
-    }
-
-  }
-
-
-  me.x =
-    Math.max(
-      me.radius,
-      Math.min(
-        map.width-me.radius,
-        me.x
-      )
-    );
-
-  me.y =
-    Math.max(
-      me.radius,
-      Math.min(
-        map.height-me.radius,
-        me.y
-      )
-    );
-
-
-  camera.x =
-    me.x-canvas.width/2;
-
-  camera.y =
-    me.y-canvas.height/2;
-
-
-  camera.x =
-    Math.max(
-      0,
-      Math.min(
-        map.width-canvas.width,
-        camera.x
-      )
-    );
-
-  camera.y =
-    Math.max(
-      0,
-      Math.min(
-        map.height-canvas.height,
-        camera.y
-      )
-    );
-
-
-  sendTimer+=dt;
-
-
-  if(sendTimer>0.05){
-
-    sendTimer=0;
-
-    if(playerId){
-
-      update(
-        ref(
-          db,
-          "rooms/"+roomCode+
-          "/players/"+playerId
-        ),
-        {
-          x:me.x,
-          y:me.y
-        }
-      );
-
-    }
-
-  }
-
-}
-
-
-/* =========================================================
-   DRAW WORLD
-========================================================= */
-
-function drawWorld(){
-
-  ctx.fillStyle="#101713";
-
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  ctx.save();
-
-  ctx.translate(
-    -camera.x,
-    -camera.y
-  );
-
-
-  /* GROUND */
-
-  ctx.fillStyle="#17221a";
-
-  ctx.fillRect(
-    0,
-    0,
-    map.width,
-    map.height
-  );
-
-
-  /* GRASS */
-
-  ctx.fillStyle="#1c2a20";
-
-  for(let x=0;x<map.width;x+=80){
-
-    for(let y=0;y<map.height;y+=80){
-
-      ctx.fillRect(
-        x+20,
-        y+30,
-        2,
-        2
-      );
-
-    }
-
-  }
-
-
-  /* ROADS */
-
-  ctx.fillStyle="#302d27";
-
-  ctx.fillRect(
-    0,
-    1150,
-    map.width,
-    160
-  );
-
-  ctx.fillRect(
-    2350,
-    0,
-    180,
-    map.height
-  );
-
-
-  /* ROAD CENTER */
-
-  ctx.strokeStyle="#49453d";
-  ctx.lineWidth=3;
-
-  ctx.setLineDash([25,25]);
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    0,
-    1230
-  );
-
-  ctx.lineTo(
-    map.width,
-    1230
-  );
-
-  ctx.stroke();
-
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    2440,
-    0
-  );
-
-  ctx.lineTo(
-    2440,
-    map.height
-  );
-
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-
-
-  /* HOUSES */
-
-  for(const h of map.houses){
-
-    /* shadow */
-
-    ctx.fillStyle=
-      "rgba(0,0,0,.35)";
-
-    ctx.fillRect(
-      h.x+18,
-      h.y+18,
-      h.w,
-      h.h
-    );
-
-
-    /* wall */
-
-    ctx.fillStyle="#8b8170";
-
-    ctx.fillRect(
-      h.x,
-      h.y,
-      h.w,
-      h.h
-    );
-
-
-    /* roof */
-
-    ctx.fillStyle="#493b35";
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      h.x-30,
-      h.y
-    );
-
-    ctx.lineTo(
-      h.x+h.w/2,
-      h.y-70
-    );
-
-    ctx.lineTo(
-      h.x+h.w+30,
-      h.y
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    /* door */
-
-    ctx.fillStyle="#34261f";
-
-    ctx.fillRect(
-      h.x+h.w/2-25,
-      h.y+h.h-85,
-      50,
-      85
-    );
-
-
-    /* windows */
-
-    ctx.fillStyle="#a9d3d6";
-
-    const wy =
-      h.y+100;
-
-    ctx.fillRect(
-      h.x+70,
-      wy,
-      70,
-      55
-    );
-
-    ctx.fillRect(
-      h.x+h.w-140,
-      wy,
-      70,
-      55
-    );
-
-  }
-
-
-  /* TREES */
-
-  for(const t of map.trees){
-
-    ctx.fillStyle=
-      "rgba(0,0,0,.3)";
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-      t.x,
-      t.y+25,
-      32,
-      13,
-      0,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fill();
-
-
-    ctx.fillStyle="#513b27";
-
-    ctx.fillRect(
-      t.x-7,
-      t.y,
-      14,
-      35
-    );
-
-
-    ctx.fillStyle="#244b2d";
-
-    ctx.beginPath();
-
-    ctx.arc(
-      t.x,
-      t.y-10,
-      t.r,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fill();
-
-
-    ctx.fillStyle="#316139";
-
-    ctx.beginPath();
-
-    ctx.arc(
-      t.x-15,
-      t.y-22,
-      20,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fill();
-
-  }
-
-
-  /* ROCKS */
-
-  for(const r of map.rocks){
-
-    ctx.fillStyle="#4d5150";
-
-    ctx.beginPath();
-
-    ctx.arc(
-      r.x,
-      r.y,
-      r.r,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fill();
-
-  }
-
-
-  /* OTHER PLAYERS */
-
-  for(const id in players){
 
     if(id===playerId)
       continue;
 
+
     const p =
       players[id];
 
+
     if(
-      typeof p.x!=="number" ||
-      typeof p.y!=="number"
-    )
-      continue;
+      !remoteMeshes[id]
+    ){
+
+      remoteMeshes[id]=
+        createRemotePlayer(
+          p.color || "#5577ff"
+        );
+
+    }
 
 
-    drawPlayer(
-      p.x,
-      p.y,
-      p.color || "#fff",
-      p.name || "Spieler"
+    const mesh =
+      remoteMeshes[id];
+
+
+    mesh.position.set(
+      p.x || 0,
+      (p.y || 1.7)-1.7,
+      p.z || 0
     );
 
   }
 
 
-  /* MY PLAYER */
+  for(
+    const id of Object.keys(
+      remoteMeshes
+    )
+  ){
 
-  drawPlayer(
-    me.x,
-    me.y,
-    me.color,
-    playerName
-  );
+    if(!players[id]){
 
+      world.remove(
+        remoteMeshes[id]
+      );
 
-  ctx.restore();
+      delete remoteMeshes[id];
+
+    }
+
+  }
 
 }
 
 
 /* =========================================================
-   DRAW PLAYER
+   PHYSICS
 ========================================================= */
 
-function drawPlayer(
-  x,
-  y,
-  color,
-  name
-){
+const gravity=
+-18;
 
-  /* shadow */
+const jumpPower=
+7;
 
-  ctx.fillStyle=
-    "rgba(0,0,0,.4)";
 
-  ctx.beginPath();
+function updatePlayer(dt){
 
-  ctx.ellipse(
-    x,
-    y+17,
-    18,
-    8,
-    0,
-    0,
-    Math.PI*2
+  let forward=0;
+  let strafe=0;
+
+
+  if(
+    keys.w ||
+    keys.arrowup
+  ){
+    forward+=1;
+  }
+
+  if(
+    keys.s ||
+    keys.arrowdown
+  ){
+    forward-=1;
+  }
+
+  if(
+    keys.a ||
+    keys.arrowleft
+  ){
+    strafe-=1;
+  }
+
+  if(
+    keys.d ||
+    keys.arrowright
+  ){
+    strafe+=1;
+  }
+
+
+  const len =
+    Math.hypot(
+      forward,
+      strafe
+    );
+
+
+  if(len>0){
+
+    forward/=len;
+    strafe/=len;
+
+  }
+
+
+  /* camera direction */
+
+  const forwardVec =
+    new THREE.Vector3(
+      -Math.sin(yaw),
+      0,
+      -Math.cos(yaw)
+    );
+
+
+  const rightVec =
+    new THREE.Vector3(
+      Math.cos(yaw),
+      0,
+      -Math.sin(yaw)
+    );
+
+
+  const move =
+    new THREE.Vector3();
+
+
+  move.addScaledVector(
+    forwardVec,
+    forward*player.speed*dt
   );
 
-  ctx.fill();
 
-
-  /* body */
-
-  ctx.fillStyle=color;
-
-  ctx.beginPath();
-
-  ctx.arc(
-    x,
-    y+3,
-    13,
-    0,
-    Math.PI*2
+  move.addScaledVector(
+    rightVec,
+    strafe*player.speed*dt
   );
 
-  ctx.fill();
+
+  const nx =
+    player.x+move.x;
+
+  const nz =
+    player.z+move.z;
 
 
-  /* head */
+  if(
+    !collisionAt(nx,player.z)
+  ){
 
-  ctx.fillStyle="#e3b08e";
+    player.x=nx;
 
-  ctx.beginPath();
+  }
 
-  ctx.arc(
-    x,
-    y-13,
-    8,
-    0,
-    Math.PI*2
+
+  if(
+    !collisionAt(player.x,nz)
+  ){
+
+    player.z=nz;
+
+  }
+
+
+  /* jump */
+
+  if(
+    keys.space &&
+    player.onGround
+  ){
+
+    player.vy=
+      jumpPower;
+
+    player.onGround=false;
+
+    keys.space=false;
+
+  }
+
+
+  /* gravity */
+
+  player.vy +=
+    gravity*dt;
+
+
+  player.y +=
+    player.vy*dt;
+
+
+  if(
+    player.y<=1.7
+  ){
+
+    player.y=1.7;
+
+    player.vy=0;
+
+    player.onGround=true;
+
+  }
+
+
+  camera.position.set(
+    player.x,
+    player.y,
+    player.z
   );
 
-  ctx.fill();
+
+  camera.rotation.order=
+    "YXZ";
+
+  camera.rotation.y=
+    yaw;
+
+  camera.rotation.x=
+    pitch;
+
+}
 
 
-  /* name */
+/* =========================================================
+   SEND POSITION
+========================================================= */
 
-  ctx.font=
-    "12px Arial";
+let sendTimer=0;
 
-  ctx.textAlign=
-    "center";
 
-  ctx.fillStyle=
-    "white";
+function sendPosition(dt){
 
-  ctx.fillText(
-    name,
-    x,
-    y-30
+  sendTimer+=dt;
+
+
+  if(
+    sendTimer<.05
+  )
+    return;
+
+
+  sendTimer=0;
+
+
+  if(!playerId)
+    return;
+
+
+  update(
+    ref(
+      db,
+      "rooms/"+roomCode+
+      "/players/"+playerId
+    ),
+    {
+      x:player.x,
+      y:player.y,
+      z:player.z
+    }
   );
+
+}
+
+
+/* =========================================================
+   BLOOD RAIN
+========================================================= */
+
+const rainParticles=[];
+
+const rainGroup=
+new THREE.Group();
+
+world.add(rainGroup);
+
+
+function createBloodRain(){
+
+  for(let i=0;i<140;i++){
+
+    const material =
+      new THREE.LineBasicMaterial({
+        color:0x8c1111,
+        transparent:true,
+        opacity:.65
+      });
+
+
+    const points=[];
+
+    const x=
+      player.x+
+      (Math.random()-.5)*80;
+
+    const z=
+      player.z+
+      (Math.random()-.5)*80;
+
+    const y=
+      10+
+      Math.random()*35;
+
+
+    points.push(
+      new THREE.Vector3(
+        x,y,z
+      )
+    );
+
+    points.push(
+      new THREE.Vector3(
+        x,
+        y-.8-Math.random()*1.2,
+        z
+      )
+    );
+
+
+    const geometry =
+      new THREE.BufferGeometry()
+        .setFromPoints(points);
+
+
+    const line =
+      new THREE.Line(
+        geometry,
+        material
+      );
+
+
+    rainGroup.add(line);
+
+
+    rainParticles.push({
+      mesh:line,
+      speed:10+
+        Math.random()*12
+    });
+
+  }
+
+}
+
+
+createBloodRain();
+
+
+function updateBloodRain(dt){
+
+  for(
+    const p of rainParticles
+  ){
+
+    p.mesh.position.y -=
+      p.speed*dt;
+
+
+    if(
+      p.mesh.position.y<
+      .1
+    ){
+
+      p.mesh.position.y=
+        20+
+        Math.random()*20;
+
+      p.mesh.position.x=
+        player.x+
+        (Math.random()-.5)*80;
+
+      p.mesh.position.z=
+        player.z+
+        (Math.random()-.5)*80;
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   BLOOD WEATHER TIMER
+========================================================= */
+
+let bloodActive=false;
+
+let bloodTimer=
+  25+
+  Math.random()*35;
+
+
+function updateBloodWeather(dt){
+
+  bloodTimer-=dt;
+
+
+  if(
+    bloodTimer<=0
+  ){
+
+    bloodActive=
+      !bloodActive;
+
+
+    bloodTimer=
+      bloodActive
+      ? 8+Math.random()*7
+      : 20+Math.random()*45;
+
+
+    bloodOverlay.style.opacity=
+      bloodActive
+      ? ".22"
+      : "0";
+
+  }
+
+}
+
+
+/* =========================================================
+   AMBIENT FOG MOVEMENT
+========================================================= */
+
+let fogTime=0;
+
+
+function updateAtmosphere(dt){
+
+  fogTime+=dt;
+
+
+  scene.fog.density=
+    0.010+
+    Math.sin(fogTime*.15)*.0015;
 
 }
 
@@ -1626,35 +2571,108 @@ function drawPlayer(
    GAME LOOP
 ========================================================= */
 
+let lastTime=
+performance.now();
+
+
 function gameLoop(time){
 
   if(!gameStarted)
     return;
 
 
-  let dt =
+  let dt=
     (time-lastTime)/1000;
+
 
   lastTime=time;
 
-  dt =
-    Math.min(dt,.05);
+
+  dt=
+    Math.min(
+      dt,
+      .05
+    );
 
 
-  updateGame(dt);
-  drawWorld();
+  updatePlayer(dt);
+
+  sendPosition(dt);
+
+  updateRemotePlayers();
+
+  updateBloodRain(dt);
+
+  updateBloodWeather(dt);
+
+  updateAtmosphere(dt);
 
 
-  requestAnimationFrame(gameLoop);
+  renderer.render(
+    scene,
+    camera
+  );
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
 }
 
 
 /* =========================================================
-   INITIAL MESSAGE
+   RESIZE
 ========================================================= */
 
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    camera.aspect=
+      innerWidth/
+      innerHeight;
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+      innerWidth,
+      innerHeight
+    );
+
+  }
+);
+
+
+/* =========================================================
+   RANDOM COLOR
+========================================================= */
+
+function randomColor(){
+
+  const colors=[
+    "#5577ff",
+    "#ff5555",
+    "#55dd88",
+    "#ffaa44",
+    "#aa66ff",
+    "#44ccee",
+    "#ff66bb",
+    "#dddddd"
+  ];
+
+  return colors[
+    Math.floor(
+      Math.random()*colors.length
+    )
+  ];
+
+}
+
+
 console.log(
-  "Imposter Game Firebase gestartet."
+  "IMPOSTER 3D gestartet."
 );
 
 </script>
