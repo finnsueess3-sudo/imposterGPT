@@ -1,0 +1,1664 @@
+```html
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imposter Game</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#080a0c;
+  font-family:Arial,sans-serif;
+  color:white;
+}
+
+canvas{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+.screen{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at center,#20252b 0%,#090b0e 70%);
+}
+
+.panel{
+  width:min(440px,92vw);
+  padding:30px;
+  background:rgba(15,18,22,.96);
+  border:1px solid #39414a;
+  border-radius:18px;
+  box-shadow:0 20px 80px rgba(0,0,0,.7);
+}
+
+h1{
+  text-align:center;
+  font-size:36px;
+  margin-bottom:8px;
+}
+
+.subtitle{
+  text-align:center;
+  color:#929aa3;
+  margin-bottom:25px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:12px;
+  border-radius:10px;
+  border:1px solid #424a53;
+  background:#090b0d;
+  color:white;
+  font-size:16px;
+  outline:none;
+}
+
+input:focus{
+  border-color:#668cff;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:8px;
+  border:0;
+  border-radius:10px;
+  background:#4d6fff;
+  color:white;
+  font-weight:bold;
+  font-size:16px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#6684ff;
+}
+
+button:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+
+.error{
+  min-height:22px;
+  color:#ff7070;
+  text-align:center;
+  margin-top:12px;
+}
+
+#lobby{
+  display:none;
+}
+
+.lobbyTitle{
+  text-align:center;
+  font-size:28px;
+  margin-bottom:8px;
+}
+
+.roomCode{
+  text-align:center;
+  font-size:22px;
+  letter-spacing:5px;
+  color:#7e9aff;
+  margin-bottom:20px;
+}
+
+.playerList{
+  max-height:300px;
+  overflow-y:auto;
+}
+
+.player{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px;
+  margin:7px 0;
+  background:#20252b;
+  border-radius:10px;
+}
+
+.playerLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+}
+
+.ready{
+  color:#65e88b;
+  font-size:13px;
+}
+
+.notReady{
+  color:#858c94;
+  font-size:13px;
+}
+
+#gameUI{
+  display:none;
+}
+
+.hud{
+  position:fixed;
+  left:15px;
+  top:15px;
+  padding:12px 16px;
+  border-radius:12px;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.1);
+  backdrop-filter:blur(5px);
+}
+
+.hudTitle{
+  font-weight:bold;
+  margin-bottom:5px;
+}
+
+#status{
+  color:#aeb6bf;
+  font-size:13px;
+}
+
+.controls{
+  position:fixed;
+  right:15px;
+  bottom:15px;
+  padding:12px 15px;
+  border-radius:12px;
+  background:rgba(0,0,0,.55);
+  color:#b8c0c8;
+  font-size:13px;
+}
+
+#startGame{
+  margin-top:15px;
+}
+
+.small{
+  font-size:12px;
+  color:#7e8790;
+  text-align:center;
+  margin-top:12px;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<!-- START -->
+<div id="startScreen" class="screen">
+  <div class="panel">
+
+    <h1>IMPOSTER</h1>
+    <div class="subtitle">Multiplayer</div>
+
+    <input id="nameInput"
+           maxlength="16"
+           placeholder="Dein Name">
+
+    <input id="roomInput"
+           maxlength="8"
+           placeholder="Raumcode">
+
+    <button id="joinBtn">
+      Raum betreten
+    </button>
+
+    <div id="error" class="error"></div>
+
+    <div class="small">
+      Gib mit anderen Spielern denselben Raumcode ein.
+    </div>
+
+  </div>
+</div>
+
+<!-- LOBBY -->
+<div id="lobby" class="screen">
+  <div class="panel">
+
+    <div class="lobbyTitle">
+      Lobby
+    </div>
+
+    <div class="roomCode">
+      <span id="roomLabel">----</span>
+    </div>
+
+    <div id="playerList" class="playerList"></div>
+
+    <button id="readyBtn">
+      BEREIT
+    </button>
+
+    <button id="startGame" disabled>
+      SPIEL STARTEN
+    </button>
+
+    <div id="lobbyError" class="error"></div>
+
+    <div class="small">
+      Alle Spieler müssen bereit sein.
+    </div>
+
+  </div>
+</div>
+
+<!-- GAME UI -->
+<div id="gameUI">
+
+  <div class="hud">
+    <div class="hudTitle">
+      <span id="myName">Spieler</span>
+    </div>
+    <div id="status">
+      Runde läuft
+    </div>
+  </div>
+
+  <div class="controls">
+    WASD / Pfeiltasten = Bewegen
+  </div>
+
+</div>
+
+<script type="module">
+
+/* =========================================================
+   FIREBASE
+========================================================= */
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  update,
+  remove,
+  onValue,
+  onDisconnect,
+  push,
+  get
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC2ugqU6kHUbbdTbK4gSVuVtVCFZAwNuqg",
+  authDomain: "impostergamegpt.firebaseapp.com",
+  databaseURL: "https://impostergamegpt-default-rtdb.firebaseio.com",
+  projectId: "impostergamegpt",
+  storageBucket: "impostergamegpt.firebasestorage.app",
+  messagingSenderId: "677628119976",
+  appId: "1:677628119976:web:6172cd9c82eecd29c4ab9d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const startScreen = document.getElementById("startScreen");
+const lobby = document.getElementById("lobby");
+const gameUI = document.getElementById("gameUI");
+
+const nameInput = document.getElementById("nameInput");
+const roomInput = document.getElementById("roomInput");
+
+const joinBtn = document.getElementById("joinBtn");
+const readyBtn = document.getElementById("readyBtn");
+const startGameBtn = document.getElementById("startGame");
+
+const playerList = document.getElementById("playerList");
+
+const roomLabel = document.getElementById("roomLabel");
+const errorBox = document.getElementById("error");
+const lobbyError = document.getElementById("lobbyError");
+
+const myNameUI = document.getElementById("myName");
+const statusUI = document.getElementById("status");
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+window.addEventListener("resize",resize);
+resize();
+
+
+/* =========================================================
+   GAME VARIABLES
+========================================================= */
+
+let roomCode = "";
+let playerId = "";
+let playerName = "";
+
+let isHost = false;
+let isReady = false;
+let gameStarted = false;
+
+let players = {};
+
+let keys = {};
+
+const me = {
+  x:0,
+  y:0,
+  speed:190,
+  radius:16,
+  color:"#4d7cff"
+};
+
+let camera = {
+  x:0,
+  y:0
+};
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+window.addEventListener("keydown",e=>{
+  keys[e.key.toLowerCase()] = true;
+
+  if([
+    "arrowup",
+    "arrowdown",
+    "arrowleft",
+    "arrowright",
+    " "
+  ].includes(e.key.toLowerCase())){
+    e.preventDefault();
+  }
+});
+
+window.addEventListener("keyup",e=>{
+  keys[e.key.toLowerCase()] = false;
+});
+
+
+/* =========================================================
+   RANDOM COLOR
+========================================================= */
+
+const colors = [
+  "#4d7cff",
+  "#ff4d5e",
+  "#49d17d",
+  "#f0b84b",
+  "#a96cff",
+  "#36c7d8",
+  "#ff7b3d",
+  "#ec62c0",
+  "#8fd14f",
+  "#d9d9d9"
+];
+
+function randomColor(){
+  return colors[Math.floor(Math.random()*colors.length)];
+}
+
+
+/* =========================================================
+   JOIN ROOM
+========================================================= */
+
+joinBtn.addEventListener("click",joinRoom);
+
+roomInput.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    joinRoom();
+  }
+});
+
+nameInput.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    joinRoom();
+  }
+});
+
+
+async function joinRoom(){
+
+  errorBox.textContent="";
+
+  playerName = nameInput.value.trim();
+  roomCode = roomInput.value.trim().toUpperCase();
+
+  if(!playerName){
+    errorBox.textContent="Bitte Namen eingeben.";
+    return;
+  }
+
+  if(!roomCode){
+    errorBox.textContent="Bitte Raumcode eingeben.";
+    return;
+  }
+
+  if(roomCode.length < 2){
+    errorBox.textContent="Der Raumcode ist zu kurz.";
+    return;
+  }
+
+  joinBtn.disabled=true;
+  joinBtn.textContent="Verbinde...";
+
+  try{
+
+    const roomPlayersRef =
+      ref(db,"rooms/"+roomCode+"/players");
+
+    const snapshot =
+      await get(roomPlayersRef);
+
+    let currentPlayers =
+      snapshot.exists()
+      ? snapshot.val()
+      : {};
+
+    const count =
+      Object.keys(currentPlayers).length;
+
+    if(count >= 10){
+
+      errorBox.textContent =
+        "Der Raum ist voll.";
+
+      joinBtn.disabled=false;
+      joinBtn.textContent="Raum betreten";
+
+      return;
+    }
+
+
+    const newPlayerRef =
+      push(roomPlayersRef);
+
+    playerId = newPlayerRef.key;
+
+    isHost = count === 0;
+
+    isReady = false;
+
+
+    me.x =
+      500 + Math.random()*200;
+
+    me.y =
+      500 + Math.random()*200;
+
+    me.color =
+      randomColor();
+
+
+    await set(newPlayerRef,{
+      name:playerName,
+      x:me.x,
+      y:me.y,
+      color:me.color,
+      ready:false,
+      host:isHost,
+      online:true
+    });
+
+
+    onDisconnect(newPlayerRef)
+      .remove();
+
+
+    roomLabel.textContent =
+      roomCode;
+
+    myNameUI.textContent =
+      playerName;
+
+
+    startScreen.style.display="none";
+    lobby.style.display="flex";
+
+
+    listenToPlayers();
+    listenToGame();
+
+
+  }catch(err){
+
+    console.error(err);
+
+    errorBox.textContent =
+      "Firebase-Fehler: "+err.message;
+
+    joinBtn.disabled=false;
+    joinBtn.textContent="Raum betreten";
+  }
+}
+
+
+/* =========================================================
+   PLAYER LISTENER
+========================================================= */
+
+function listenToPlayers(){
+
+  const playersRef =
+    ref(db,"rooms/"+roomCode+"/players");
+
+  onValue(playersRef,snapshot=>{
+
+    players =
+      snapshot.exists()
+      ? snapshot.val()
+      : {};
+
+    renderPlayerList();
+
+    updateStartButton();
+
+    if(gameStarted){
+      statusUI.textContent =
+        Object.keys(players).length+
+        " Spieler online";
+    }
+
+  });
+}
+
+
+/* =========================================================
+   PLAYER LIST
+========================================================= */
+
+function renderPlayerList(){
+
+  playerList.innerHTML="";
+
+  const ids =
+    Object.keys(players);
+
+  if(ids.length===0){
+
+    playerList.innerHTML =
+      "<div style='text-align:center;color:#777'>Keine Spieler</div>";
+
+    return;
+  }
+
+
+  ids.forEach(id=>{
+
+    const p =
+      players[id];
+
+    const row =
+      document.createElement("div");
+
+    row.className="player";
+
+
+    const left =
+      document.createElement("div");
+
+    left.className="playerLeft";
+
+
+    const dot =
+      document.createElement("div");
+
+    dot.className="dot";
+
+    dot.style.background =
+      p.color || "#fff";
+
+
+    const name =
+      document.createElement("span");
+
+    name.textContent =
+      p.name || "Spieler";
+
+
+    if(p.host){
+
+      const host =
+        document.createElement("span");
+
+      host.textContent =
+        " ★";
+
+      host.style.color =
+        "#ffd75a";
+
+      name.appendChild(host);
+    }
+
+
+    left.appendChild(dot);
+    left.appendChild(name);
+
+
+    const state =
+      document.createElement("span");
+
+
+    if(p.ready){
+
+      state.textContent =
+        "BEREIT";
+
+      state.className =
+        "ready";
+
+    }else{
+
+      state.textContent =
+        "WARTET";
+
+      state.className =
+        "notReady";
+    }
+
+
+    row.appendChild(left);
+    row.appendChild(state);
+
+    playerList.appendChild(row);
+
+  });
+
+}
+
+
+/* =========================================================
+   READY
+========================================================= */
+
+readyBtn.addEventListener("click",async()=>{
+
+  if(!playerId) return;
+
+  isReady = !isReady;
+
+  const playerRef =
+    ref(
+      db,
+      "rooms/"+roomCode+
+      "/players/"+playerId
+    );
+
+  await update(playerRef,{
+    ready:isReady
+  });
+
+
+  if(isReady){
+
+    readyBtn.textContent =
+      "NICHT BEREIT";
+
+  }else{
+
+    readyBtn.textContent =
+      "BEREIT";
+  }
+
+});
+
+
+/* =========================================================
+   START BUTTON
+========================================================= */
+
+function updateStartButton(){
+
+  const ids =
+    Object.keys(players);
+
+  if(!isHost){
+
+    startGameBtn.style.display =
+      "none";
+
+    return;
+  }
+
+  startGameBtn.style.display =
+    "block";
+
+
+  if(ids.length===0){
+
+    startGameBtn.disabled=true;
+    return;
+  }
+
+
+  const allReady =
+    ids.every(id=>
+      players[id].ready === true
+    );
+
+
+  startGameBtn.disabled =
+    !allReady;
+
+
+  if(allReady){
+
+    startGameBtn.textContent =
+      "SPIEL STARTEN";
+
+  }else{
+
+    startGameBtn.textContent =
+      "ALLE MÜSSEN BEREIT SEIN";
+  }
+
+}
+
+
+/* =========================================================
+   HOST START
+========================================================= */
+
+startGameBtn.addEventListener("click",async()=>{
+
+  if(!isHost) return;
+
+  const ids =
+    Object.keys(players);
+
+  if(ids.length===0) return;
+
+
+  const allReady =
+    ids.every(id=>
+      players[id].ready === true
+    );
+
+
+  if(!allReady){
+
+    lobbyError.textContent =
+      "Noch nicht alle bereit.";
+
+    return;
+  }
+
+
+  await set(
+    ref(db,"rooms/"+roomCode+"/started"),
+    true
+  );
+
+});
+
+
+/* =========================================================
+   GAME LISTENER
+========================================================= */
+
+function listenToGame(){
+
+  const gameRef =
+    ref(db,"rooms/"+roomCode+"/started");
+
+  onValue(gameRef,snapshot=>{
+
+    const started =
+      snapshot.val() === true;
+
+    if(started){
+      startGame();
+    }
+
+  });
+
+}
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function startGame(){
+
+  if(gameStarted) return;
+
+  gameStarted=true;
+
+  lobby.style.display="none";
+  gameUI.style.display="block";
+
+  statusUI.textContent =
+    "Runde läuft";
+
+  requestAnimationFrame(gameLoop);
+
+}
+
+
+/* =========================================================
+   MAP
+========================================================= */
+
+const map = {
+
+  width:5000,
+  height:5000,
+
+  houses:[
+    {x:400,y:350,w:500,h:350},
+    {x:1500,y:500,w:600,h:400},
+    {x:2900,y:350,w:750,h:450},
+    {x:800,y:1500,w:700,h:450},
+    {x:2200,y:1500,w:500,h:350},
+    {x:3600,y:1500,w:650,h:500},
+    {x:400,y:2900,w:700,h:450},
+    {x:1700,y:2700,w:650,h:500},
+    {x:3000,y:2900,w:850,h:450},
+    {x:4100,y:3800,w:550,h:450}
+  ],
+
+  trees:[],
+
+  rocks:[]
+};
+
+
+/* =========================================================
+   CREATE TREES
+========================================================= */
+
+for(let i=0;i<180;i++){
+
+  let x =
+    100+Math.random()*4800;
+
+  let y =
+    100+Math.random()*4800;
+
+  let blocked =
+    map.houses.some(h=>
+      x>h.x-80 &&
+      x<h.x+h.w+80 &&
+      y>h.y-80 &&
+      y<h.y+h.h+80
+    );
+
+  if(!blocked){
+
+    map.trees.push({
+      x,
+      y,
+      r:28
+    });
+
+  }
+}
+
+
+/* =========================================================
+   CREATE ROCKS
+========================================================= */
+
+for(let i=0;i<80;i++){
+
+  let x =
+    100+Math.random()*4800;
+
+  let y =
+    100+Math.random()*4800;
+
+  let blocked =
+    map.houses.some(h=>
+      x>h.x-50 &&
+      x<h.x+h.w+50 &&
+      y>h.y-50 &&
+      y<h.y+h.h+50
+    );
+
+  if(!blocked){
+
+    map.rocks.push({
+      x,
+      y,
+      r:18
+    });
+
+  }
+}
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function circleRectCollision(
+  cx,cy,r,rect
+){
+
+  const closestX =
+    Math.max(
+      rect.x,
+      Math.min(cx,rect.x+rect.w)
+    );
+
+  const closestY =
+    Math.max(
+      rect.y,
+      Math.min(cy,rect.y+rect.h)
+    );
+
+  const dx =
+    cx-closestX;
+
+  const dy =
+    cy-closestY;
+
+  return dx*dx+dy*dy < r*r;
+}
+
+
+function blocked(x,y){
+
+  for(const h of map.houses){
+
+    if(
+      circleRectCollision(
+        x,y,me.radius,h
+      )
+    ){
+      return true;
+    }
+
+  }
+
+
+  for(const t of map.trees){
+
+    const dx=x-t.x;
+    const dy=y-t.y;
+
+    const dist =
+      Math.sqrt(dx*dx+dy*dy);
+
+    if(
+      dist <
+      me.radius+t.r
+    ){
+      return true;
+    }
+
+  }
+
+
+  for(const r of map.rocks){
+
+    const dx=x-r.x;
+    const dy=y-r.y;
+
+    const dist =
+      Math.sqrt(dx*dx+dy*dy);
+
+    if(
+      dist <
+      me.radius+r.r
+    ){
+      return true;
+    }
+
+  }
+
+
+  return false;
+}
+
+
+/* =========================================================
+   MOVEMENT
+========================================================= */
+
+let lastTime =
+  performance.now();
+
+let sendTimer=0;
+
+function updateGame(dt){
+
+  let dx=0;
+  let dy=0;
+
+
+  if(
+    keys["w"] ||
+    keys["arrowup"]
+  ){
+    dy-=1;
+  }
+
+  if(
+    keys["s"] ||
+    keys["arrowdown"]
+  ){
+    dy+=1;
+  }
+
+  if(
+    keys["a"] ||
+    keys["arrowleft"]
+  ){
+    dx-=1;
+  }
+
+  if(
+    keys["d"] ||
+    keys["arrowright"]
+  ){
+    dx+=1;
+  }
+
+
+  if(dx!==0 || dy!==0){
+
+    const len =
+      Math.sqrt(dx*dx+dy*dy);
+
+    dx/=len;
+    dy/=len;
+
+
+    const nx =
+      me.x+
+      dx*me.speed*dt;
+
+    const ny =
+      me.y+
+      dy*me.speed*dt;
+
+
+    if(!blocked(nx,me.y)){
+      me.x=nx;
+    }
+
+    if(!blocked(me.x,ny)){
+      me.y=ny;
+    }
+
+  }
+
+
+  me.x =
+    Math.max(
+      me.radius,
+      Math.min(
+        map.width-me.radius,
+        me.x
+      )
+    );
+
+  me.y =
+    Math.max(
+      me.radius,
+      Math.min(
+        map.height-me.radius,
+        me.y
+      )
+    );
+
+
+  camera.x =
+    me.x-canvas.width/2;
+
+  camera.y =
+    me.y-canvas.height/2;
+
+
+  camera.x =
+    Math.max(
+      0,
+      Math.min(
+        map.width-canvas.width,
+        camera.x
+      )
+    );
+
+  camera.y =
+    Math.max(
+      0,
+      Math.min(
+        map.height-canvas.height,
+        camera.y
+      )
+    );
+
+
+  sendTimer+=dt;
+
+
+  if(sendTimer>0.05){
+
+    sendTimer=0;
+
+    if(playerId){
+
+      update(
+        ref(
+          db,
+          "rooms/"+roomCode+
+          "/players/"+playerId
+        ),
+        {
+          x:me.x,
+          y:me.y
+        }
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   DRAW WORLD
+========================================================= */
+
+function drawWorld(){
+
+  ctx.fillStyle="#101713";
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  ctx.save();
+
+  ctx.translate(
+    -camera.x,
+    -camera.y
+  );
+
+
+  /* GROUND */
+
+  ctx.fillStyle="#17221a";
+
+  ctx.fillRect(
+    0,
+    0,
+    map.width,
+    map.height
+  );
+
+
+  /* GRASS */
+
+  ctx.fillStyle="#1c2a20";
+
+  for(let x=0;x<map.width;x+=80){
+
+    for(let y=0;y<map.height;y+=80){
+
+      ctx.fillRect(
+        x+20,
+        y+30,
+        2,
+        2
+      );
+
+    }
+
+  }
+
+
+  /* ROADS */
+
+  ctx.fillStyle="#302d27";
+
+  ctx.fillRect(
+    0,
+    1150,
+    map.width,
+    160
+  );
+
+  ctx.fillRect(
+    2350,
+    0,
+    180,
+    map.height
+  );
+
+
+  /* ROAD CENTER */
+
+  ctx.strokeStyle="#49453d";
+  ctx.lineWidth=3;
+
+  ctx.setLineDash([25,25]);
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    1230
+  );
+
+  ctx.lineTo(
+    map.width,
+    1230
+  );
+
+  ctx.stroke();
+
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    2440,
+    0
+  );
+
+  ctx.lineTo(
+    2440,
+    map.height
+  );
+
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+
+
+  /* HOUSES */
+
+  for(const h of map.houses){
+
+    /* shadow */
+
+    ctx.fillStyle=
+      "rgba(0,0,0,.35)";
+
+    ctx.fillRect(
+      h.x+18,
+      h.y+18,
+      h.w,
+      h.h
+    );
+
+
+    /* wall */
+
+    ctx.fillStyle="#8b8170";
+
+    ctx.fillRect(
+      h.x,
+      h.y,
+      h.w,
+      h.h
+    );
+
+
+    /* roof */
+
+    ctx.fillStyle="#493b35";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      h.x-30,
+      h.y
+    );
+
+    ctx.lineTo(
+      h.x+h.w/2,
+      h.y-70
+    );
+
+    ctx.lineTo(
+      h.x+h.w+30,
+      h.y
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* door */
+
+    ctx.fillStyle="#34261f";
+
+    ctx.fillRect(
+      h.x+h.w/2-25,
+      h.y+h.h-85,
+      50,
+      85
+    );
+
+
+    /* windows */
+
+    ctx.fillStyle="#a9d3d6";
+
+    const wy =
+      h.y+100;
+
+    ctx.fillRect(
+      h.x+70,
+      wy,
+      70,
+      55
+    );
+
+    ctx.fillRect(
+      h.x+h.w-140,
+      wy,
+      70,
+      55
+    );
+
+  }
+
+
+  /* TREES */
+
+  for(const t of map.trees){
+
+    ctx.fillStyle=
+      "rgba(0,0,0,.3)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      t.x,
+      t.y+25,
+      32,
+      13,
+      0,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#513b27";
+
+    ctx.fillRect(
+      t.x-7,
+      t.y,
+      14,
+      35
+    );
+
+
+    ctx.fillStyle="#244b2d";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      t.x,
+      t.y-10,
+      t.r,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#316139";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      t.x-15,
+      t.y-22,
+      20,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+
+  /* ROCKS */
+
+  for(const r of map.rocks){
+
+    ctx.fillStyle="#4d5150";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      r.x,
+      r.y,
+      r.r,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+
+  /* OTHER PLAYERS */
+
+  for(const id in players){
+
+    if(id===playerId)
+      continue;
+
+    const p =
+      players[id];
+
+    if(
+      typeof p.x!=="number" ||
+      typeof p.y!=="number"
+    )
+      continue;
+
+
+    drawPlayer(
+      p.x,
+      p.y,
+      p.color || "#fff",
+      p.name || "Spieler"
+    );
+
+  }
+
+
+  /* MY PLAYER */
+
+  drawPlayer(
+    me.x,
+    me.y,
+    me.color,
+    playerName
+  );
+
+
+  ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer(
+  x,
+  y,
+  color,
+  name
+){
+
+  /* shadow */
+
+  ctx.fillStyle=
+    "rgba(0,0,0,.4)";
+
+  ctx.beginPath();
+
+  ctx.ellipse(
+    x,
+    y+17,
+    18,
+    8,
+    0,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  /* body */
+
+  ctx.fillStyle=color;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    x,
+    y+3,
+    13,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  /* head */
+
+  ctx.fillStyle="#e3b08e";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    x,
+    y-13,
+    8,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  /* name */
+
+  ctx.font=
+    "12px Arial";
+
+  ctx.textAlign=
+    "center";
+
+  ctx.fillStyle=
+    "white";
+
+  ctx.fillText(
+    name,
+    x,
+    y-30
+  );
+
+}
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function gameLoop(time){
+
+  if(!gameStarted)
+    return;
+
+
+  let dt =
+    (time-lastTime)/1000;
+
+  lastTime=time;
+
+  dt =
+    Math.min(dt,.05);
+
+
+  updateGame(dt);
+  drawWorld();
+
+
+  requestAnimationFrame(gameLoop);
+}
+
+
+/* =========================================================
+   INITIAL MESSAGE
+========================================================= */
+
+console.log(
+  "Imposter Game Firebase gestartet."
+);
+
+</script>
+
+</body>
+</html>
+```
